@@ -1,7 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 from datetime import datetime
-
 
 # ======================
 # USERS
@@ -9,6 +8,8 @@ from datetime import datetime
 class UserBase(BaseModel):
     username: str
     email: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreate(UserBase):
@@ -20,9 +21,7 @@ class User(UserBase):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ======================
@@ -38,9 +37,9 @@ class TaskCreate(TaskBase):
 
 
 class TaskUpdate(BaseModel):
-    title: Optional[str]
-    description: Optional[str]
-    completed: Optional[bool]
+    title: Optional[str] = None
+    description: Optional[str] = None
+    completed: Optional[bool] = None
 
 
 class Task(TaskBase):
@@ -48,9 +47,9 @@ class Task(TaskBase):
     completed: bool
     created_at: datetime
     updated_at: datetime
+    owner_id: int  # add owner for completeness
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ======================
@@ -68,10 +67,9 @@ class FileCreate(FileBase):
 class File(FileBase):
     id: int
     uploaded_at: datetime
+    task_id: int
 
-    class Config:
-        from_attributes = True
-
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ======================
@@ -89,20 +87,18 @@ class Notification(NotificationBase):
     id: int
     is_read: bool
     created_at: datetime
+    user_id: int
 
-    class Config:
-        from_attributes = True
-
-
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ======================
 # AUTHORIZATION
 # ======================
-
-from pydantic import BaseModel
-from typing import Optional
-
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class TokenData(BaseModel):
+    sub: Optional[str] = None  # username or user_id inside JWT

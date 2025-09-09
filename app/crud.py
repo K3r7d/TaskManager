@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # ======================
@@ -69,7 +69,7 @@ def update_task(db: Session, task_id: int, task_update: schemas.TaskUpdate):
             db_task.description = task_update.description
         if task_update.completed is not None:
             db_task.completed = task_update.completed
-        db_task.updated_at = datetime.utcnow()
+        db_task.updated_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(db_task)
     return db_task
