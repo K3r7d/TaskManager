@@ -1,0 +1,19 @@
+FROM python:3.12.0-slim
+
+# Set working directory
+WORKDIR /code
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend code
+COPY ./app ./app
+
+# Set PYTHONPATH so 'app' is discoverable
+ENV PYTHONPATH=/code
+
+EXPOSE 8000
+
+# Run FastAPI with hot reload
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
