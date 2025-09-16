@@ -16,7 +16,8 @@ services:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/code
     depends_on:
-      - db
+      db:
+        condition: service_healthy  
     networks:
       - app-network
 
@@ -30,15 +31,19 @@ services:
       - "3307:3306"
     networks:
       - app-network
+    healthcheck:                   
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   frontend:
     build:
-      context: ../frontend
+      context: ../front-dash-boost
       dockerfile: Dockerfile.frontend
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
       - REACT_APP_API_URL=http://backend:8000
     depends_on:
       - backend

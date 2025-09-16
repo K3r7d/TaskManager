@@ -1,7 +1,12 @@
 from fastapi import FastAPI
 from .routes import auth, tasks, files, notifications
 from fastapi.middleware.cors import CORSMiddleware
+from app.database import engine, Base
+from app import models
+
+
 app = FastAPI(title="Task Manager API")
+Base.metadata.create_all(bind=engine)
 
 # Routers
 app.include_router(auth.router)
