@@ -1,65 +1,22 @@
-pipeline 
-{
+pipeline {
     agent any
 
-    environment 
-    {
-        DOCKER_COMPOSE_FILE = "docker/docker-compose.yml"
+    environment {
+        DOCKER_CONFIG = "${WORKSPACE}/.docker" // use local docker config
     }
 
-    stages 
-    {
-        stage('Checkout')
-        {
-            steps { checkout scm }
-        }
-        stage('Build') 
-        {
-            steps 
-            {
-                echo "Building docker images with docker compose..."
-                sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} build --parallel"
-                sh "mkdir -p build_artifacts && echo 'built' > build_artifacts/status.txt"
-                archiveArtifacts artifacts: 'build_artifacts/**', allowEmptyArchive: false
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
             }
         }
-        // stage('Test') 
-        // {
-        //     steps 
-        //     {
-        //         echo 'Running tests...'
-                
-        //     }
-        // }
-        // stage('Code Quality') 
-        // {
-        //     steps 
-        //     {
-        //         echo 'Running code quality check...'
-                
-        //     }
-        // }
-        // stage('Security') 
-        // {
-        //     steps 
-        //     {
-        //         echo 'Running security scan...'
-                
-        //     }
-        // }
-        // stage('Deploy') 
-        // {
-        //     steps 
-        //     {
-        //         echo 'Deploying...'
-                
-        //     }
-        // }
-    }
-    post 
-    {
-        success { echo "Build stage completed." }
-        failure { echo "Build failed." }
-    }
 
+        stage('Build') {
+            steps {
+                echo 'Building docker images with docker compose...'
+                sh '/usr/local/bin/docker compose -f docker/docker-compose.yml build --parallel'
+            }
+        }
+    }
 }
