@@ -18,7 +18,7 @@ pipeline
             steps 
             {
                 echo "Building docker images with docker compose..."
-                sh "docker compose -f ${DOCKER_COMPOSE_FILE} build --parallel"
+                sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} build --parallel"
                 sh "mkdir -p build_artifacts && echo 'built' > build_artifacts/status.txt"
                 archiveArtifacts artifacts: 'build_artifacts/**', allowEmptyArchive: false
             }
