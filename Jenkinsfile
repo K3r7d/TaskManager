@@ -46,6 +46,14 @@ EOF
                         echo "⏳ Waiting for database to be healthy..."
                         sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} up --wait db"
                         
+                        // Additional wait to ensure database is fully ready
+                        echo "⏳ Giving database extra time to initialize..."
+                        sh "sleep 10"
+                        
+                        // Verify database is accepting connections
+                        echo "🔍 Verifying database connectivity..."
+                        sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} exec db mysqladmin ping -h localhost --silent || echo 'Database ping failed but continuing...'"
+                        
                         // Create directory for test reports
                         sh "mkdir -p test-reports"
                         
