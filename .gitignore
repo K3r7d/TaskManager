@@ -14,7 +14,9 @@ dist/
 downloads/
 eggs/
 .eggs/
+# Ignore lib/ only in the project root (commonly used for Python venv)
 lib/
+!front-dash-boost/src/lib/
 lib64/
 parts/
 sdist/
@@ -209,3 +211,5 @@ __marimo__/
 
 DEMO_SCRIPT.md
 DEVOPS_PIPELINE.md
+
+node_modules
