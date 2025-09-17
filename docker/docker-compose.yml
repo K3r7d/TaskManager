@@ -47,6 +47,10 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/code
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
     depends_on:
       db:
         condition: service_healthy

@@ -7,6 +7,7 @@ pipeline {
         DATABASE_URL="mysql+mysqlconnector://newuser:123456@mysql-db:3306/TASKMANAGER"
         MYSQL_DATABASE="TASKMANAGER"
         MYSQL_ROOT_PASSWORD = credentials('MYSQL_ROOT_PASSWORD')
+        SECRET_KEY="fallbacksecret"
     }
 
     stages {
