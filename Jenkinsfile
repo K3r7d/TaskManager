@@ -10,6 +10,12 @@ pipeline {
         stage('Checkout') {
             steps { checkout scm }
         }
+        stage('Prepare Environment') {
+            steps {
+                sh 'cp docker/.env .'
+            }
+        }
+
         stage('Build') {
             steps {
                 echo "Building docker images with docker compose..."
