@@ -266,10 +266,10 @@ EOF
                         echo "🔍 Checking for common security patterns..."
                         sh '''
                         # Check for hardcoded secrets or sensitive information
-                        grep -r -i "password\|secret\|key\|token" app/ --include="*.py" > security-reports/potential-secrets.txt || echo "No obvious secrets found"
+                        grep -r -i -E "password|secret|key|token" app/ --include="*.py" > security-reports/potential-secrets.txt || echo "No obvious secrets found"
                         
                         # Check for SQL injection patterns
-                        grep -r "execute.*%\|query.*%" app/ --include="*.py" > security-reports/sql-patterns.txt || echo "No obvious SQL injection patterns found"
+                        grep -r -E "execute.*%|query.*%" app/ --include="*.py" > security-reports/sql-patterns.txt || echo "No obvious SQL injection patterns found"
                         
                         # Generate security summary
                         echo "Security Scan Summary" > security-reports/summary.txt
