@@ -80,13 +80,13 @@ EOF
                     script {
                         // Collect test results and reports
                         if (fileExists('test-reports/test-results.xml')) {
-                            echo "📈 Publishing test results..."
+                            echo "Publishing test results..."
                             publishTestResults testResultsPattern: 'test-reports/test-results.xml'
                         }
                         
                         // Archive test reports and artifacts
                         if (fileExists('test-reports/')) {
-                            echo "📊 Archiving test reports..."
+                            echo "Archiving test reports..."
                             archiveArtifacts artifacts: 'test-reports/**/*', allowEmptyArchive: true
                         }
                         

@@ -37,30 +37,30 @@ def test_read_task(client, auth_headers):
     assert data["id"] == task_id
     assert data["title"] == "Single Task"
 
-# def test_read_tasks(client, auth_headers):
-#     """Test reading all tasks with authorization."""
-#     # Optionally clear existing tasks before running this test
-#     # (Assuming an endpoint exists to delete all tasks for test isolation)
-#     client.delete("/tasks/", headers=auth_headers)
+def test_read_tasks(client, auth_headers):
+    """Test reading all tasks with authorization."""
+    # Optionally clear existing tasks before running this test
+    # (Assuming an endpoint exists to delete all tasks for test isolation)
+    client.delete("/tasks/", headers=auth_headers)
 
-#     task_ids = []
-#     for i in range(1, 5):
-#         response = client.post(
-#             "/tasks/",
-#             json={"title": f"task {i}"},
-#             headers=auth_headers,
-#         )
-#         assert response.status_code == 200
-#         task_ids.append(response.json()["id"])
+    task_ids = []
+    for i in range(1, 5):
+        response = client.post(
+            "/tasks/",
+            json={"title": f"task {i}"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        task_ids.append(response.json()["id"])
 
-#     response = client.get("/tasks/", headers=auth_headers)
-#     assert response.status_code == 200
-#     data = response.json()
-#     # Only check tasks created in this test
-#     filtered_tasks = [task for task in data if task["id"] in task_ids]
-#     titles = [task["title"] for task in filtered_tasks]
-#     for i in range(1, 5):
-#         assert f"task {i}" in titles
+    response = client.get("/tasks/", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    # Only check tasks created in this test
+    filtered_tasks = [task for task in data if task["id"] in task_ids]
+    titles = [task["title"] for task in filtered_tasks]
+    for i in range(1, 5):
+        assert f"task {i}" in titles
 
 def test_update_task(client, auth_headers):
     """Test updating a task."""
