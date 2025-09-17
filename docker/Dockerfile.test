@@ -7,6 +7,8 @@ WORKDIR /code
 COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+# Install additional test reporting dependencies
+RUN pip install pytest-html pytest-json-report
 
 # Copy backend code and tests
 COPY ./app ./app
@@ -16,5 +18,5 @@ COPY ./pytest.ini ./pytest.ini
 # Set PYTHONPATH so 'app' is discoverable
 ENV PYTHONPATH=/code
 
-# Default command to run tests
-CMD ["python", "-m", "pytest", "test/", "-v", "--tb=short"]
+# Default command to run tests with reporting
+CMD ["python", "-m", "pytest", "test/", "-v", "--tb=short", "--junitxml=/tmp/test-results.xml", "--html=/tmp/test-report.html", "--json-report", "--json-report-file=/tmp/test-report.json"]
