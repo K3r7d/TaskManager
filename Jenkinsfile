@@ -5,6 +5,8 @@ pipeline {
         DOCKER_COMPOSE_FILE = "docker/docker-compose.yml"
         PATH = "/usr/local/bin:${env.PATH}"
         DATABASE_URL="mysql+mysqlconnector://newuser:123456@mysql-db:3306/TASKMANAGER"
+        MYSQL_DATABASE="TASKMANAGER"
+        MYSQL_ROOT_PASSWORD = credentials('MYSQL_ROOT_PASSWORD')
     }
 
     stages {
@@ -24,6 +26,17 @@ pipeline {
                 
                 script {
                     try {
+                        // Create .env file from pipeline environment variables
+                        echo "⚙️ Creating environment configuration..."
+                        sh '''
+                        cat > .env << EOF
+DATABASE_URL=${DATABASE_URL}
+MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+MYSQL_DATABASE=${MYSQL_DATABASE}
+SECRET_KEY=${SECRET_KEY}
+EOF
+                        '''
+                        
                         // Start database service and wait for it to be healthy
                         echo "📦 Starting database service..."
                         sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} up -d db"
@@ -110,32 +123,30 @@ pipeline {
             when {
                 anyOf {
                     branch 'main'
-                    branch 'master'
-                    branch 'develop'
                 }
             }
             steps {
-                echo "🚀 Starting deployment..."
+                echo "Starting deployment..."
                 
                 script {
                     try {
                         // Stop any existing services
-                        echo "📴 Stopping existing services..."
+                        echo " Stopping existing services..."
                         sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} down || true"
                         
                         // Deploy the application
-                        echo "🌆 Deploying application stack..."
+                        echo " Deploying application stack..."
                         sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} up -d --build"
                         
                         // Wait for services to be healthy
-                        echo "⏳ Waiting for services to be ready..."
+                        echo " Waiting for services to be ready..."
                         sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} up --wait"
                         
                         // Verify deployment
-                        echo "✅ Verifying deployment..."
+                        echo " Verifying deployment..."
                         sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} ps"
                         
-                        echo "✅ Deployment completed successfully!"
+                        echo " Deployment completed successfully!"
                         
                     } catch (Exception e) {
                         echo "❌ Deployment failed: ${e.getMessage()}"
