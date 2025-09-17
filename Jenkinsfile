@@ -37,6 +37,8 @@ MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
 MYSQL_DATABASE=${MYSQL_DATABASE}
 SECRET_KEY=${SECRET_KEY}
 EOF
+                        echo "📋 Environment file created:"
+                        cat .env
                         '''
                         
                         // Start database service and wait for it to be healthy
@@ -56,6 +58,10 @@ EOF
                         
                         // Create directory for test reports
                         sh "mkdir -p test-reports"
+                        
+                        // Debug: Check environment variables in test container
+                        echo "🔍 Debug: Checking environment variables in test container..."
+                        sh "/usr/local/bin/docker compose -f ${DOCKER_COMPOSE_FILE} --profile test run --rm test env | grep -E '(DATABASE_URL|MYSQL|SECRET)' || echo 'No matching env vars found'"
                         
                         // Run backend tests using dedicated test service
                         echo "🚀 Running backend tests with dedicated test service..."
