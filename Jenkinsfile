@@ -599,42 +599,6 @@ EOF
                 }
             }
         }
-                echo "Starting deployment..."
-                
-                script {
-                    try {
-                        // Stop any existing services
-                        echo " Stopping existing services..."
-                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} down || true"
-                        
-                        // Deploy the application
-                        echo " Deploying application stack..."
-                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} up -d --build"
-                        
-                        // Wait for services to be healthy
-                        echo " Waiting for services to be ready..."
-                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} up --wait"
-                        
-                        // Verify deployment
-                        echo " Verifying deployment..."
-                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} ps"
-                        
-                        echo " Deployment completed successfully!"
-                        
-                    } catch (Exception e) {
-                        echo "❌ Deployment failed: ${e.getMessage()}"
-                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} logs || true"
-                        throw e
-                    }
-                }
-            }
-            post {
-                failure {
-                    echo "❌ Deployment failed - Rolling back..."
-                    sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} down || true"
-                }
-            }
-        }
 
     }
     post {
