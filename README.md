@@ -1,3 +1,154 @@
-# TaskManager
+## Task Manager Application - Complete CI/CD Pipeline
 
-Simple Task Manager app with full CICD
+### Project Overview
+This project implements a comprehensive DevOps pipeline for a Task Manager application using Jenkins, Docker, and various analysis tools. The application consists of:
+- **Backend**: FastAPI (Python) RESTful API
+- **Frontend**: React with TypeScript
+- **Database**: MySQL 8.0
+- **Containerization**: Docker and Docker Compose
+
+### Technologies Used
+- **CI/CD**: Jenkins Pipeline
+- **Containerization**: Docker, Docker Compose
+- **Code Quality**: SonarQube Community Edition
+- **Security Analysis**: Trivy, Bandit
+- **Monitoring**: Prometheus, Grafana, Node Exporter
+- **Database**: MySQL 8.0
+- **Backend**: FastAPI, Python 3.9+
+- **Frontend**: React 18, TypeScript, Vite
+
+## Pipeline Stages
+
+### 1. Checkout Stage
+- Retrieves source code from Git repository
+- Sets up workspace for subsequent stages
+
+### 2. Build Stage
+- Builds Docker images for backend, frontend, and test services
+- Uses Docker Compose with parallel building for efficiency
+- Creates deployable artifacts (Docker images)
+
+### 3. Test Stage 
+- **Framework**: pytest for backend testing
+- **Database**: Uses dedicated test database service
+- **Coverage**: Generates test reports and coverage metrics
+- **Frontend**: vitest for React component testing
+- **Reports**: Archives test results and HTML reports
+
+### 4. Code Quality Analysis Stage 
+- **Tool**: SonarQube Community Edition
+- **Analysis**: 
+  - Code complexity and maintainability
+  - Code duplication detection
+  - Code smell identification
+  - Technical debt assessment
+- **Metrics**: Lines of code, file counts, complexity scores
+- **Reports**: Archived code quality reports
+
+### 5. Security Analysis Stage 
+- **Tools**: 
+  - **Trivy**: Filesystem and dependency vulnerability scanning
+  - **Bandit**: Python-specific security issue detection
+- **Scans**:
+  - Source code security vulnerabilities
+  - Dependency vulnerabilities  
+  - Hardcoded secrets detection
+  - SQL injection pattern detection
+- **Reporting**: Detailed security scan reports with severity levels
+- **Action**: Build marked as UNSTABLE if vulnerabilities found
+
+### 6. Deploy Stage (Staging)
+- **Environment**: Staging deployment
+- **Process**: 
+  - Stops existing services
+  - Deploys with health checks
+  - Runs smoke tests
+- **Verification**: Health endpoint and database connectivity tests
+
+### 7. Release Stage (Production) 
+- **Manual Gate**: Requires approval for production deployment
+- **Environment**: Production-specific configuration
+- **Process**: 
+  - Production environment setup
+  - Health verification
+  - Rollback capability
+- **Notifications**: Success/failure notifications
+
+### 8. Monitoring Setup Stage 
+- **Tools**: 
+  - **Prometheus**: Metrics collection and alerting
+  - **Grafana**: Visualization dashboards
+  - **Node Exporter**: System metrics
+- **Endpoints**: 
+  - Prometheus: http://localhost:9090
+  - Grafana: http://localhost:3001 (admin/admin123)
+- **Monitoring**: Application health, database status, system metrics
+
+## Pipeline Features
+
+### Automated Testing
+- Comprehensive backend API testing
+- Frontend component testing
+- Database integration testing
+- Test report generation and archiving
+
+###  Quality Gates
+- Code quality thresholds
+- Security vulnerability assessment
+- Test coverage requirements
+- Manual production deployment approval
+
+### Reporting & Artifacts
+- Test results (XML/HTML)
+- Code quality metrics
+- Security scan reports
+- Monitoring setup reports
+- All reports archived in Jenkins
+
+### 🐳 Containerization
+- Multi-stage Docker builds
+- Docker Compose orchestration
+- Service health checks
+- Production-ready configurations
+
+### 🔐 Security Integration
+- Automated vulnerability scanning
+- Security best practices enforcement
+- Secret management
+- Rollback mechanisms
+
+## Setup Instructions
+
+### Prerequisites
+- Jenkins with Docker support
+- Docker and Docker Compose installed
+- Network access for downloading tools
+
+### Jenkins Configuration
+1. Create new Pipeline job
+2. Point to this repository's Jenkinsfile
+3. Configure credentials:
+   - `MYSQL_ROOT_PASSWORD`: MySQL root password
+4. Ensure Jenkins has Docker permissions
+
+### Running the Pipeline
+1. **Automatic Trigger**: Push to main branch
+2. **Manual Trigger**: Build in Jenkins UI
+3. **Stages Execute**: All stages run automatically until Release
+4. **Manual Approval**: Production deployment requires approval
+
+## Monitoring Access
+
+After successful pipeline execution:
+- **Prometheus**: http://localhost:9090 - Metrics and alerting
+- **Grafana**: http://localhost:3001 - Visual dashboards (admin/admin123)
+- **Application**: http://localhost:8000 - Task Manager API
+- **Frontend**: http://localhost:3000 - Task Manager UI
+
+## Reports and Artifacts
+
+Each pipeline run generates:
+- **Test Reports**: HTML and XML format
+- **Code Quality Reports**: SonarQube analysis results
+- **Security Reports**: Vulnerability scan results
+- **Monitoring Reports**: Setup verification status
