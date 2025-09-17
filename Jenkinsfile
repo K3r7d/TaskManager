@@ -12,13 +12,6 @@ pipeline {
             steps { checkout scm }
         }
 
-        stage('Prepare Environment') {
-            steps {
-                echo "Copying .env file..."
-                sh 'cp docker/.env .'
-            }
-        }
-
         stage('Build') {
             steps {
                 echo "Building docker images with docker compose..."
