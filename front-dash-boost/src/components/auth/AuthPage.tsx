@@ -151,6 +151,7 @@ const AuthPage = () => {
                       onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                       required
                       className="transition-smooth"
+                      data-testid="reg-email"
                     />
                   </div>
                   <div className="space-y-2">
@@ -169,7 +170,7 @@ const AuthPage = () => {
                       <AlertDescription>{registerError}</AlertDescription>
                     </Alert>
                   )}
-                  <Button type="submit" className="w-full gradient-primary" disabled={isLoading}>
+                  <Button type="submit" className="w-full gradient-primary" data-testid="create-acc" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Account
                   </Button>
