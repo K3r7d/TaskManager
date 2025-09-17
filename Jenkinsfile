@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_COMPOSE_FILE = "docker/docker-compose.yml"
         PATH = "/usr/local/bin:${env.PATH}"
-        DATABASE_URL = credentials('DATABASE_URL')
+        DATABASE_URL = "mysql+mysqlconnector://newuser:123456@mysql-db:3306/TASKMANAGER"
     }
 
     stages {
