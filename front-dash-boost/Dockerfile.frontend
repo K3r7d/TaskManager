@@ -1,5 +1,5 @@
 FROM node:20-alpine
-WORKDIR /front-dash-boost/app
+WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .

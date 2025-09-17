@@ -191,7 +191,7 @@ EOF
                         '''
                         
                         // Generate simple code quality report
-                        echo "📊 Generating code quality report..."
+                        echo "Generating code quality report..."
                         sh '''
                         mkdir -p code-quality-reports
                         
@@ -208,7 +208,7 @@ EOF
                         fi
                         '''
                         
-                        echo "✅ Code Quality Analysis completed!"
+                        echo "Code Quality Analysis completed!"
                         
                     } catch (Exception e) {
                         echo "⚠️ Code Quality Analysis had issues: ${e.getMessage()}"
@@ -230,7 +230,7 @@ EOF
 
         stage('Security Analysis') {
             steps {
-                echo "🔒 Starting Security Analysis..."
+                echo "Starting Security Analysis..."
                 
                 script {
                     try {
@@ -320,28 +320,23 @@ EOF
                 }
             }
             steps {
-                echo "🚀 Starting Staging Deployment..."
+                echo "Starting Staging Deployment..."
                 
                 script {
                     try {
-                        // Stop any existing services
-                        echo "🛑 Stopping existing services..."
+                        echo "Stopping existing services..."
                         sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} down || true"
                         
-                        // Deploy the application to staging
-                        echo "📦 Deploying application stack to staging..."
+                        echo "Deploying application stack to staging..."
                         sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} up -d --build"
                         
-                        // Wait for services to be healthy
-                        echo "⏳ Waiting for services to be ready..."
+                        echo "Waiting for services to be ready..."
                         sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} up --wait"
-                        
-                        // Verify deployment
-                        echo "✅ Verifying staging deployment..."
+
+                        echo "Verifying staging deployment..."
                         sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} ps"
-                        
-                        // Basic smoke test
-                        echo "🧪 Running basic smoke tests..."
+
+                        echo "Running basic smoke tests..."
                         sh '''
                         # Test backend health endpoint
                         curl -f http://localhost:8000/health || echo "Backend health check failed"
@@ -431,8 +426,8 @@ EOF
                         echo "🎉 Production release completed successfully!"
                         
                     } catch (Exception e) {
-                        echo "❌ Production release failed: ${e.getMessage()}"
-                        echo "🔄 Initiating rollback procedure..."
+                        echo "Production release failed: ${e.getMessage()}"
+                        echo "Initiating rollback procedure..."
                         
                         // Rollback to previous version
                         sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} up -d || echo 'Rollback failed'"
@@ -442,17 +437,17 @@ EOF
             }
             post {
                 success {
-                    echo "🎉 Production release successful!"
+                    echo "Production release successful!"
                     script {
                         // Send success notification (placeholder)
-                        echo "📧 Sending deployment success notification..."
+                        echo "Sending deployment success notification..."
                     }
                 }
                 failure {
-                    echo "❌ Production release failed!"
+                    echo "Production release failed!"
                     script {
                         // Send failure notification (placeholder)
-                        echo "📧 Sending deployment failure notification..."
+                        echo "Sending deployment failure notification..."
                     }
                 }
             }
@@ -465,7 +460,7 @@ EOF
                 }
             }
             steps {
-                echo "📊 Setting up Monitoring and Alerting..."
+                echo "Setting up Monitoring and Alerting..."
                 
                 script {
                     try {
@@ -482,9 +477,9 @@ EOF
                                     try {
                                         sh "curl -f http://localhost:9090/-/ready"
                                         prometheusReady = true
-                                        echo "✅ Prometheus is ready!"
+                                        echo "Prometheus is ready!"
                                     } catch (Exception e) {
-                                        echo "⏳ Prometheus not ready yet, waiting..."
+                                        echo "Prometheus not ready yet, waiting..."
                                         sleep(30)
                                     }
                                 }
@@ -500,7 +495,7 @@ EOF
                                     try {
                                         sh "curl -f http://localhost:3001/api/health"
                                         grafanaReady = true
-                                        echo "✅ Grafana is ready!"
+                                        echo "Grafana is ready!"
                                     } catch (Exception e) {
                                         echo "⏳ Grafana not ready yet, waiting..."
                                         sleep(30)
@@ -510,7 +505,7 @@ EOF
                         }
                         
                         // Create monitoring report
-                        echo "📊 Generating monitoring setup report..."
+                        echo "Generating monitoring setup report..."
                         sh '''
                         mkdir -p monitoring-reports
                         
