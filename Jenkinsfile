@@ -4,6 +4,8 @@ pipeline {
     environment {
         DOCKER_COMPOSE_FILE = "docker/docker-compose.yml"
         PATH = "/usr/local/bin:${env.PATH}"
+
+        DATABASE
     }
 
     stages {

@@ -38,6 +38,23 @@ services:
       retries: 10
       start_period: 30s
 
+  test:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.test
+    env_file:
+      - ../.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/code
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    profiles:
+      - test
+
   frontend:
     build:
       context: ../front-dash-boost
