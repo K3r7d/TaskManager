@@ -8,6 +8,7 @@ pipeline {
         MYSQL_DATABASE="TASKMANAGER"
         MYSQL_ROOT_PASSWORD = credentials('MYSQL_ROOT_PASSWORD')
         SECRET_KEY="fallbacksecret"
+        MYSQL_PASSWORD=123456
     }
 
     stages {
