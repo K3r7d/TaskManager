@@ -58,8 +58,8 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=newuser
-      - MYSQL_PASSWORD=123456
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
