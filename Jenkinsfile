@@ -150,55 +150,165 @@ EOF
                         // Create code quality reports directory
                         sh "mkdir -p code-quality-reports"
                         
-                        // Run Python linting with flake8 (if available)
-                        echo "🐍 Running Python code analysis..."
+                        // Run comprehensive Python code quality analysis
+                        echo "🐍 Running comprehensive Python code analysis..."
                         sh '''
-                        # Install basic Python code quality tools in a container
+                        # Create reports directory
+                        mkdir -p code-quality-reports
+                        
+                        # Use Python container with quality tools
                         docker run --rm -v "$PWD:/app" -w /app python:3.9-slim bash -c "
-                          pip install flake8 bandit safety || echo 'Failed to install tools'
+                          echo '📦 Installing Python code quality tools...'
+                          pip install --no-cache-dir flake8 bandit safety radon || {
+                            echo '⚠️ Some tools failed to install, continuing with available ones'
+                            pip install --no-cache-dir flake8 bandit safety || echo 'Basic tools installation failed'
+                          }
                           
-                          echo 'Running flake8 linting...'
-                          flake8 app --max-line-length=88 --ignore=E203,E501 --format=json --output-file=code-quality-reports/flake8-report.json || echo 'Flake8 completed with issues'
+                          echo ''
+                          echo '🎯 Running Flake8 (Code Style & Quality)...'
+                          flake8 app \\
+                            --max-line-length=88 \\
+                            --ignore=E203,E501,W503 \\
+                            --exclude=__pycache__,*.pyc,venv \\
+                            --format=json \\
+                            --output-file=code-quality-reports/flake8-report.json || {
+                            echo '⚠️ Flake8 found style issues (see report)'
+                            flake8 app --max-line-length=88 --ignore=E203,E501,W503 --exclude=__pycache__ > code-quality-reports/flake8-readable.txt || true
+                          }
                           
-                          echo 'Running security analysis with bandit...'
-                          bandit -r app -f json -o code-quality-reports/bandit-report.json || echo 'Bandit completed with issues'
+                          echo ''
+                          echo '🔒 Running Bandit (Security Analysis)...'
+                          bandit -r app \\
+                            -f json \\
+                            -o code-quality-reports/bandit-report.json \\
+                            -ll || {
+                            echo '⚠️ Bandit found security issues (see report)'
+                            bandit -r app > code-quality-reports/bandit-readable.txt || true
+                          }
                           
-                          echo 'Checking dependencies for vulnerabilities...'
-                          safety check --json --output code-quality-reports/safety-report.json || echo 'Safety check completed'
-                        " || echo "Code analysis tools failed but continuing..."
+                          echo ''
+                          echo '🛡️ Running Safety (Dependency Vulnerability Check)...'
+                          if [ -f 'requirements.txt' ]; then
+                            safety check > code-quality-reports/safety-readable.txt 2>&1 || {
+                              echo '⚠️ Safety found vulnerabilities (see report)'
+                            }
+                          else
+                            echo 'No requirements.txt found - skipping dependency check' > code-quality-reports/safety-readable.txt
+                          fi
+                          
+                          echo ''
+                          echo '📊 Running Code Complexity Analysis...'
+                          radon cc app -j > code-quality-reports/complexity-report.json || {
+                            echo '⚠️ Radon complexity analysis failed'
+                            echo '{\"error\": \"Complexity analysis failed\"}' > code-quality-reports/complexity-report.json
+                          }
+                          
+                          echo ''
+                          echo '📈 Running Maintainability Index...'
+                          radon mi app -j > code-quality-reports/maintainability-report.json || {
+                            echo '⚠️ Maintainability analysis failed'
+                            echo '{\"error\": \"Maintainability analysis failed\"}' > code-quality-reports/maintainability-report.json
+                          }
+                          
+                          echo ''
+                          echo '✅ Code analysis completed!'
+                        " || echo "⚠️ Some code analysis tools failed but continuing..."
                         '''
                         
-                        // Generate summary report
-                        echo "📈 Generating code quality summary..."
+                        // Generate comprehensive summary report
+                        echo "📈 Generating comprehensive code quality summary..."
                         sh '''
-                        # Generate basic code quality metrics
-                        find app -name "*.py" -exec wc -l {} + > code-quality-reports/line-counts.txt
-                        find app -name "*.py" | wc -l > code-quality-reports/file-count.txt
+                        # Generate basic metrics
+                        find app -name "*.py" -exec wc -l {} + > code-quality-reports/line-counts.txt 2>/dev/null || echo "0" > code-quality-reports/line-counts.txt
+                        find app -name "*.py" | wc -l > code-quality-reports/file-count.txt 2>/dev/null || echo "0" > code-quality-reports/file-count.txt
                         
-                        # Create summary
+                        # Count issues from reports
+                        FLAKE8_ISSUES=0
+                        BANDIT_ISSUES=0
+                        SAFETY_ISSUES=0
+                        
+                        # Count flake8 issues from readable report
+                        if [ -f "code-quality-reports/flake8-readable.txt" ]; then
+                          FLAKE8_ISSUES=$(wc -l < code-quality-reports/flake8-readable.txt 2>/dev/null || echo "0")
+                        fi
+                        
+                        # Count bandit issues from readable report  
+                        if [ -f "code-quality-reports/bandit-readable.txt" ]; then
+                          BANDIT_ISSUES=$(grep -c "Issue:" code-quality-reports/bandit-readable.txt 2>/dev/null || echo "0")
+                        fi
+                        
+                        # Count safety issues from readable report
+                        if [ -f "code-quality-reports/safety-readable.txt" ]; then
+                          SAFETY_ISSUES=$(grep -c "VULNERABILITY" code-quality-reports/safety-readable.txt 2>/dev/null || echo "0")
+                        fi
+                        
+                        # Create comprehensive summary
                         cat > code-quality-reports/summary.txt << EOF
 Code Quality Analysis Summary
 ============================
 Date: $(date)
-Status: COMPLETED (Lightweight Analysis)
+Status: COMPLETED
+Analysis Type: Comprehensive Python Code Quality
 
-Python Files: $(cat code-quality-reports/file-count.txt)
-Total Lines: $(awk '{sum += $1} END {print sum}' code-quality-reports/line-counts.txt)
+📊 Project Metrics:
+- Python Files: $(cat code-quality-reports/file-count.txt)
+- Total Lines of Code: $(awk '{sum += \\$1} END {print sum}' code-quality-reports/line-counts.txt 2>/dev/null || echo "Unknown")
 
-Tools Used:
-- Flake8 (Code Style)
-- Bandit (Security)  
-- Safety (Dependency Security)
+🔍 Quality Issues Found:
+- Flake8 (Style/Quality): $FLAKE8_ISSUES issues
+- Bandit (Security): $BANDIT_ISSUES issues  
+- Safety (Dependencies): $SAFETY_ISSUES vulnerabilities
 
-Note: SonarQube analysis temporarily disabled
-For full analysis, enable SonarQube when resource issues are resolved.
+🛠️ Tools Used:
+✅ Flake8 - Python style guide checker
+✅ Bandit - Security linter for Python
+✅ Safety - Dependency vulnerability scanner
+✅ Radon - Code complexity analysis
+
+📋 Report Files Generated:
+- flake8-report.json (+ readable version)
+- bandit-report.json (+ readable version)  
+- safety-readable.txt
+- complexity-report.json
+- maintainability-report.json
+
+💡 Recommendations:
+- Review flake8-readable.txt for style improvements
+- Check bandit-readable.txt for security concerns
+- Address safety-readable.txt for dependency vulnerabilities
+- Monitor complexity reports for maintainability
+
+🚨 Build Status:
 EOF
+
+                        # Set build status based on critical issues
+                        if [ "$BANDIT_ISSUES" -gt 0 ] || [ "$SAFETY_ISSUES" -gt 0 ]; then
+                          echo "⚠️ UNSTABLE - Critical security issues found" >> code-quality-reports/summary.txt
+                          echo "UNSTABLE" > code-quality-reports/build-status.txt
+                        else
+                          echo "✅ SUCCESS - No critical security issues found" >> code-quality-reports/summary.txt
+                          echo "SUCCESS" > code-quality-reports/build-status.txt
+                        fi
                         
-                        echo "Code Quality Analysis Results:"
+                        echo ""
+                        echo "📋 Code Quality Analysis Results:"
+                        echo "================================="
                         cat code-quality-reports/summary.txt
+                        echo ""
                         '''
                         
-                        echo "✅ Lightweight code quality analysis completed!"
+                        // Check if we should mark build as unstable
+                        script {
+                            if (fileExists('code-quality-reports/build-status.txt')) {
+                                def buildStatus = readFile('code-quality-reports/build-status.txt').trim()
+                                if (buildStatus == 'UNSTABLE') {
+                                    currentBuild.result = 'UNSTABLE'
+                                    echo "⚠️ Build marked as UNSTABLE due to security issues"
+                                }
+                            }
+                        }
+                        
+                        echo "✅ Code Quality Analysis completed successfully!"
                         
                     } catch (Exception e) {
                         echo "⚠️ Code Quality Analysis had issues: ${e.getMessage()}"
