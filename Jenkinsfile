@@ -71,14 +71,17 @@ EOF
                         
                         // Optional: Run frontend tests if they exist
                         echo "🎨 Running frontend tests (if available)..."
-                        sh '''
-                        if /usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} config --services | grep -q "frontend"; then
-                            echo "Frontend service found, running frontend tests..."
-                            /usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} run --rm frontend npm test -- --watchAll=false --passWithNoTests 2>/dev/null
-                        else
-                            echo "No frontend service configured, skipping frontend tests"
-                        fi
-                        '''
+                        script {
+                            def composeFile = env.DOCKER_COMPOSE_FILE
+                            sh """
+                            if /usr/local/bin/docker compose --env-file .env -f ${composeFile} config --services | grep -q "frontend"; then
+                                echo "Frontend service found, running frontend tests..."
+                                /usr/local/bin/docker compose --env-file .env -f ${composeFile} run --rm frontend npm test -- --watchAll=false --passWithNoTests 2>/dev/null
+                            else
+                                echo "No frontend service configured, skipping frontend tests"
+                            fi
+                            """
+                        }
                         
                     } catch (Exception e) {
                         echo "❌ Test stage failed: ${e.getMessage()}"
