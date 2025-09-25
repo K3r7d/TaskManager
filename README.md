@@ -1,7 +1,16 @@
-## Task Manager Application - Complete CI/CD Pipeline
+
+## Branch Migration Notice
+
+**This repository has migrated to a new main branch.**
+
+All development now continues on the updated `main` branch, which replaces the previous history. If you had forks or clones, please rebase or re-clone to ensure you have the latest code and pipeline setup.
+
+---
+
+## Task Manager Application - CI/CD Pipeline Capstone Project
 
 ### Project Overview
-This project implements a comprehensive DevOps pipeline for a Task Manager application using Jenkins, Docker, and various analysis tools. The application consists of:
+This capstone project implements a comprehensive DevOps pipeline for a Task Manager application using Jenkins, Docker, and various analysis tools. The application consists of:
 - **Backend**: FastAPI (Python) RESTful API
 - **Frontend**: React with TypeScript
 - **Database**: MySQL 8.0
@@ -10,12 +19,47 @@ This project implements a comprehensive DevOps pipeline for a Task Manager appli
 ### Technologies Used
 - **CI/CD**: Jenkins Pipeline
 - **Containerization**: Docker, Docker Compose
-- **Code Quality**: SonarQube Community Edition
-- **Security Analysis**: Trivy, Bandit
-- **Monitoring**: Prometheus, Grafana, Node Exporter
 - **Database**: MySQL 8.0
 - **Backend**: FastAPI, Python 3.9+
 - **Frontend**: React 18, TypeScript, Vite
+- **Code Quality**: pytest, flake8, radon
+- **Security**: bandit, safety, trivy
+
+## Setting Up the Project
+
+### Clone the Repository
+```bash
+git clone https://github.com/K3r7d/TaskManager.git
+cd TaskManager
+```
+
+### Environment Configuration
+- Copy `.env.example` to `.env` and update environment variables as needed.
+- Ensure database credentials and API keys are set.
+
+### Install Dependencies
+- **Backend**:
+  ```bash
+  cd backend
+  pip install -r requirements.txt
+  ```
+- **Frontend**:
+  ```bash
+  cd front-dash-boost
+  npm install
+  ```
+
+### Start Services Locally
+- Use Docker Compose to start all services:
+  ```bash
+  docker compose up --build
+  ```
+- Access the application at [http://localhost:3000](http://localhost:3000) (frontend) and [http://localhost:8000](http://localhost:8000) (API).
+
+### Initial Database Setup
+- Database migrations are handled automatically on startup.
+- For manual setup, use provided SQL scripts in the `db` directory.
+
 
 ## Pipeline Stages
 
@@ -36,26 +80,21 @@ This project implements a comprehensive DevOps pipeline for a Task Manager appli
 - **Reports**: Archives test results and HTML reports
 
 ### 4. Code Quality Analysis Stage 
-- **Tool**: SonarQube Community Edition
+- **Tools Used**: pytest (testing), flake8 (style/lint), radon (complexity)
 - **Analysis**: 
-  - Code complexity and maintainability
-  - Code duplication detection
-  - Code smell identification
-  - Technical debt assessment
-- **Metrics**: Lines of code, file counts, complexity scores
-- **Reports**: Archived code quality reports
+  - Code style and linting (flake8)
+  - Code complexity and maintainability (radon)
+  - Automated backend tests and coverage (pytest)
+- **Reports**: XML/HTML test reports, flake8 and radon reports
 
 ### 5. Security Analysis Stage 
-- **Tools**: 
-  - **Trivy**: Filesystem and dependency vulnerability scanning
-  - **Bandit**: Python-specific security issue detection
+- **Tools Used**: bandit (Python code security), safety (dependency vulnerabilities), trivy (filesystem & dependency scan)
 - **Scans**:
-  - Source code security vulnerabilities
-  - Dependency vulnerabilities  
-  - Hardcoded secrets detection
-  - SQL injection pattern detection
-- **Reporting**: Detailed security scan reports with severity levels
-- **Action**: Build marked as UNSTABLE if vulnerabilities found
+  - Python code security vulnerabilities (bandit)
+  - Dependency vulnerabilities (safety, trivy)
+  - Filesystem vulnerabilities (trivy)
+  - Manual checks for secrets and SQL injection patterns
+- **Reports**: Security scan reports, manual findings
 
 ### 6. Deploy Stage (Staging)
 - **Environment**: Staging deployment
@@ -75,14 +114,7 @@ This project implements a comprehensive DevOps pipeline for a Task Manager appli
 - **Notifications**: Success/failure notifications
 
 ### 8. Monitoring Setup Stage 
-- **Tools**: 
-  - **Prometheus**: Metrics collection and alerting
-  - **Grafana**: Visualization dashboards
-  - **Node Exporter**: System metrics
-- **Endpoints**: 
-  - Prometheus: http://localhost:9090
-  - Grafana: http://localhost:3001 (admin/admin123)
-- **Monitoring**: Application health, database status, system metrics
+- **Monitoring**: (Optional) Add monitoring tools as needed for your environment
 
 ## Pipeline Features
 
@@ -101,8 +133,7 @@ This project implements a comprehensive DevOps pipeline for a Task Manager appli
 ### Reporting & Artifacts
 - Test results (XML/HTML)
 - Code quality metrics
-- Security scan reports
-- Monitoring setup reports
+- Security scan reports (if enabled)
 - All reports archived in Jenkins
 
 ### 🐳 Containerization
@@ -111,7 +142,7 @@ This project implements a comprehensive DevOps pipeline for a Task Manager appli
 - Service health checks
 - Production-ready configurations
 
-### 🔐 Security Integration
+### Security Integration
 - Automated vulnerability scanning
 - Security best practices enforcement
 - Secret management
@@ -132,16 +163,14 @@ This project implements a comprehensive DevOps pipeline for a Task Manager appli
 4. Ensure Jenkins has Docker permissions
 
 ### Running the Pipeline
-1. **Automatic Trigger**: Push to main branch
+1. **Automatic Trigger**: Push to the new main branch
 2. **Manual Trigger**: Build in Jenkins UI
 3. **Stages Execute**: All stages run automatically until Release
 4. **Manual Approval**: Production deployment requires approval
 
-## Monitoring Access
+## Application Access
 
 After successful pipeline execution:
-- **Prometheus**: http://localhost:9090 - Metrics and alerting
-- **Grafana**: http://localhost:3001 - Visual dashboards (admin/admin123)
 - **Application**: http://localhost:8000 - Task Manager API
 - **Frontend**: http://localhost:3000 - Task Manager UI
 
