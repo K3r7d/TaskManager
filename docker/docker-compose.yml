@@ -16,7 +16,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
       - MYSQL_USER=newuser
-      - MYSQL_PASSWORD=123456
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     depends_on:
       db:
         condition: service_healthy  
