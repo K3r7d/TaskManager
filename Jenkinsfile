@@ -75,7 +75,7 @@ EOF
                         if /usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} config --services | grep -q "frontend"; then
                             echo "Frontend service found, running frontend tests..."
                             /usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} run --rm frontend \
-                            npm test -- --watchAll=false --passWithNoTests 2>/dev/null || echo "Frontend tests completed or not configured"
+                            npm test -- --watchAll=false --passWithNoTests 2>/dev/null"
                         else
                             echo "No frontend service configured, skipping frontend tests"
                         fi
@@ -143,24 +143,54 @@ EOF
                 
                 script {
                     try {
+                        // Clean up any existing SonarQube containers first
+                        echo "🧹 Cleaning up existing SonarQube containers..."
+                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile analysis down || true"
+                        
                         // Start SonarQube service
                         echo "🚀 Starting SonarQube service..."
                         sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile analysis up -d sonarqube"
                         
-                        // Wait for SonarQube to be ready
+                        // Check container status
+                        echo "📊 Checking SonarQube container status..."
+                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile analysis ps sonarqube"
+                        
+                        // Show SonarQube logs for debugging
+                        echo "📋 SonarQube startup logs:"
+                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile analysis logs sonarqube | tail -20 || echo 'No logs available yet'"
+                        
+                        // Wait for SonarQube to be ready with better error handling
                         echo "⏳ Waiting for SonarQube to be ready..."
-                        timeout(time: 5, unit: 'MINUTES') {
+                        timeout(time: 8, unit: 'MINUTES') {
                             script {
                                 def sonarReady = false
-                                while (!sonarReady) {
+                                def attempts = 0
+                                def maxAttempts = 16
+                                
+                                while (!sonarReady && attempts < maxAttempts) {
+                                    attempts++
                                     try {
-                                        sh "curl -f http://localhost:9000/api/system/status"
+                                        // Check if container is still running
+                                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile analysis ps sonarqube | grep -q 'Up' || exit 1"
+                                        
+                                        // Try to connect to SonarQube
+                                        sh "curl -s --connect-timeout 10 --max-time 30 http://localhost:9000/api/system/status"
                                         sonarReady = true
                                         echo "✅ SonarQube is ready!"
                                     } catch (Exception e) {
-                                        echo "⏳ SonarQube not ready yet, waiting..."
+                                        echo "⏳ SonarQube not ready yet (attempt ${attempts}/${maxAttempts}), waiting..."
+                                        if (attempts % 4 == 0) {
+                                            echo "📋 Latest SonarQube logs:"
+                                            sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile analysis logs --tail=10 sonarqube || echo 'Cannot fetch logs'"
+                                        }
                                         sleep(30)
                                     }
+                                }
+                                
+                                if (!sonarReady) {
+                                    echo "❌ SonarQube failed to start after ${maxAttempts} attempts"
+                                    sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile analysis logs sonarqube || echo 'Cannot fetch logs'"
+                                    throw new Exception("SonarQube startup timeout")
                                 }
                             }
                         }
@@ -199,13 +229,21 @@ EOF
                         export PATH=$PATH:$PWD/sonar-scanner-4.8.0.2856-linux/bin
                         source sonar.env
                         
+                        echo "📊 Starting SonarQube analysis..."
                         sonar-scanner \
                           -Dsonar.projectKey=taskmanager \
                           -Dsonar.sources=app \
                           -Dsonar.host.url=http://localhost:9000 \
                           -Dsonar.token=$SONAR_TOKEN \
                           -Dsonar.python.coverage.reportPaths=coverage.xml \
-                          -Dsonar.exclusions="**/__pycache__/**,**/*.pyc,**/venv/**" || echo "SonarQube analysis completed with warnings"
+                          -Dsonar.exclusions="**/__pycache__/**,**/*.pyc,**/venv/**" \
+                          -Dsonar.scm.provider=git || {
+                            echo "⚠️ SonarQube analysis failed, but continuing pipeline..."
+                            echo "Check SonarQube server logs for details"
+                            exit 0
+                          }
+                        
+                        echo "✅ SonarQube analysis completed successfully!"
                         '''
                         
                         // Generate simple code quality report
@@ -230,7 +268,29 @@ EOF
                         
                     } catch (Exception e) {
                         echo "⚠️ Code Quality Analysis had issues: ${e.getMessage()}"
-                        echo "Continuing pipeline as this is not critical for basic functionality..."
+                        echo "📋 Attempting to collect SonarQube logs for debugging..."
+                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile analysis logs sonarqube || echo 'Cannot fetch SonarQube logs'"
+                        
+                        echo "🔄 Generating fallback code quality report..."
+                        sh '''
+                        mkdir -p code-quality-reports
+                        echo "SonarQube Analysis Status: FAILED" > code-quality-reports/sonar-status.txt
+                        echo "Timestamp: $(date)" >> code-quality-reports/sonar-status.txt
+                        echo "Error: SonarQube service failed to start properly" >> code-quality-reports/sonar-status.txt
+                        echo "" >> code-quality-reports/sonar-status.txt
+                        echo "Fallback: Generated basic code metrics instead" >> code-quality-reports/sonar-status.txt
+                        
+                        # Generate basic code quality metrics as fallback
+                        echo "Generating basic code quality metrics..."
+                        find app -name "*.py" -exec wc -l {} + > code-quality-reports/line-counts.txt
+                        find app -name "*.py" | wc -l > code-quality-reports/file-count.txt
+                        echo "Total Python files: $(cat code-quality-reports/file-count.txt)" > code-quality-reports/summary.txt
+                        echo "Total lines of code: $(awk '{sum += $1} END {print sum}' code-quality-reports/line-counts.txt)" >> code-quality-reports/summary.txt
+                        '''
+                        
+                        echo "⚠️ Continuing pipeline with fallback code quality metrics..."
+                        // Don't fail the pipeline, just mark as unstable
+                        currentBuild.result = 'UNSTABLE'
                     }
                 }
             }
