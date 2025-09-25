@@ -176,16 +176,34 @@ EOF
                         fi
                         '''
                         
+                        // Use SonarQube token from environment
+                        echo "🔑 Using SonarQube token from environment..."
+                        sh '''
+                        # Wait a bit more for SonarQube to be fully ready
+                        sleep 30
+                        
+                        # Verify token is available
+                        if [ -z "$SONAR_TOKEN" ]; then
+                            echo "❌ SONAR_TOKEN environment variable is not set"
+                            echo "💡 Please set SONAR_TOKEN in your .env file"
+                            exit 1
+                        fi
+                        
+                        echo "✅ Using configured SonarQube token"
+                        echo "SONAR_TOKEN=$SONAR_TOKEN" > sonar.env
+                        '''
+                        
                         // Run SonarQube analysis
                         echo "🔍 Running SonarQube code analysis..."
                         sh '''
                         export PATH=$PATH:$PWD/sonar-scanner-4.8.0.2856-linux/bin
+                        source sonar.env
+                        
                         sonar-scanner \
                           -Dsonar.projectKey=taskmanager \
                           -Dsonar.sources=app \
                           -Dsonar.host.url=http://localhost:9000 \
-                          -Dsonar.login=admin \
-                          -Dsonar.password=admin \
+                          -Dsonar.token=$SONAR_TOKEN \
                           -Dsonar.python.coverage.reportPaths=coverage.xml \
                           -Dsonar.exclusions="**/__pycache__/**,**/*.pyc,**/venv/**" || echo "SonarQube analysis completed with warnings"
                         '''
@@ -358,239 +376,6 @@ EOF
                 failure {
                     echo "❌ Staging deployment failed - Rolling back..."
                     sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} down || true"
-                }
-            }
-        }
-
-        stage('Release') {
-            when {
-                anyOf {
-                    branch 'main'
-                }
-            }
-            input {
-                message "Deploy to Production?"
-                ok "Deploy"
-                parameters {
-                    choice(name: 'DEPLOY_ENV', choices: ['production', 'staging'], description: 'Target deployment environment')
-                }
-            }
-            steps {
-                echo "🚀 Starting Production Release..."
-                
-                script {
-                    try {
-                        echo "🎯 Deploying to ${params.DEPLOY_ENV} environment..."
-                        
-                        // Create production environment file
-                        echo "⚙️ Setting up production configuration..."
-                        sh '''
-                        cat > .env.prod << EOF
-DATABASE_URL=${DATABASE_URL}
-MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-MYSQL_DATABASE=${MYSQL_DATABASE}
-MYSQL_USER=newuser
-MYSQL_PASSWORD=123456
-SECRET_KEY=${SECRET_KEY}
-ENVIRONMENT=production
-DEBUG=false
-EOF
-                        '''
-                        
-                        // Deploy to production with production settings
-                        echo "📦 Deploying to production environment..."
-                        sh "/usr/local/bin/docker compose --env-file .env.prod -f ${DOCKER_COMPOSE_FILE} up -d --build"
-                        
-                        // Wait for production services
-                        echo "⏳ Waiting for production services..."
-                        sh "/usr/local/bin/docker compose --env-file .env.prod -f ${DOCKER_COMPOSE_FILE} up --wait"
-                        
-                        // Production verification
-                        echo "✅ Verifying production deployment..."
-                        sh '''
-                        # Comprehensive production health checks
-                        echo "Running production health checks..."
-                        
-                        # Backend health check
-                        curl -f http://localhost:8000/health -H "Accept: application/json" || echo "Backend health check failed"
-                        
-                        # Database health check
-                        /usr/local/bin/docker compose --env-file .env.prod -f ${DOCKER_COMPOSE_FILE} exec db mysqladmin ping -h localhost --silent || echo "Database health check failed"
-                        
-                        # Check all containers are running
-                        /usr/local/bin/docker compose --env-file .env.prod -f ${DOCKER_COMPOSE_FILE} ps
-                        
-                        echo "Production deployment verification completed!"
-                        '''
-                        
-                        echo "🎉 Production release completed successfully!"
-                        
-                    } catch (Exception e) {
-                        echo "Production release failed: ${e.getMessage()}"
-                        echo "Initiating rollback procedure..."
-                        
-                        // Rollback to previous version
-                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} up -d || echo 'Rollback failed'"
-                        throw e
-                    }
-                }
-            }
-            post {
-                success {
-                    echo "Production release successful!"
-                    script {
-                        // Send success notification (placeholder)
-                        echo "Sending deployment success notification..."
-                    }
-                }
-                failure {
-                    echo "Production release failed!"
-                    script {
-                        // Send failure notification (placeholder)
-                        echo "Sending deployment failure notification..."
-                    }
-                }
-            }
-        }
-
-        stage('Monitoring Setup') {
-            when {
-                anyOf {
-                    branch 'main'
-                }
-            }
-            steps {
-                echo "Setting up Monitoring and Alerting..."
-                
-                script {
-                    try {
-                        // Start monitoring services
-                        echo "🚀 Starting monitoring stack..."
-                        sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile monitoring up -d"
-                        
-                        // Wait for Prometheus to be ready
-                        echo "⏳ Waiting for Prometheus to be ready..."
-                        timeout(time: 3, unit: 'MINUTES') {
-                            script {
-                                def prometheusReady = false
-                                while (!prometheusReady) {
-                                    try {
-                                        sh "curl -f http://localhost:9090/-/ready"
-                                        prometheusReady = true
-                                        echo "Prometheus is ready!"
-                                    } catch (Exception e) {
-                                        echo "Prometheus not ready yet, waiting..."
-                                        sleep(30)
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Wait for Grafana to be ready
-                        echo "⏳ Waiting for Grafana to be ready..."
-                        timeout(time: 3, unit: 'MINUTES') {
-                            script {
-                                def grafanaReady = false
-                                while (!grafanaReady) {
-                                    try {
-                                        sh "curl -f http://localhost:3001/api/health"
-                                        grafanaReady = true
-                                        echo "Grafana is ready!"
-                                    } catch (Exception e) {
-                                        echo "⏳ Grafana not ready yet, waiting..."
-                                        sleep(30)
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Create monitoring report
-                        echo "Generating monitoring setup report..."
-                        sh '''
-                        mkdir -p monitoring-reports
-                        
-                        # Generate monitoring status report
-                        echo "Monitoring Setup Report" > monitoring-reports/monitoring-status.txt
-                        echo "=====================" >> monitoring-reports/monitoring-status.txt
-                        echo "Setup Date: $(date)" >> monitoring-reports/monitoring-status.txt
-                        echo "" >> monitoring-reports/monitoring-status.txt
-                        
-                        # Check Prometheus
-                        if curl -s http://localhost:9090/-/ready; then
-                            echo "✅ Prometheus: RUNNING (http://localhost:9090)" >> monitoring-reports/monitoring-status.txt
-                        else
-                            echo "❌ Prometheus: NOT ACCESSIBLE" >> monitoring-reports/monitoring-status.txt
-                        fi
-                        
-                        # Check Grafana
-                        if curl -s http://localhost:3001/api/health; then
-                            echo "✅ Grafana: RUNNING (http://localhost:3001)" >> monitoring-reports/monitoring-status.txt
-                            echo "   Default login: admin/admin123" >> monitoring-reports/monitoring-status.txt
-                        else
-                            echo "❌ Grafana: NOT ACCESSIBLE" >> monitoring-reports/monitoring-status.txt
-                        fi
-                        
-                        # Check Node Exporter
-                        if /usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} --profile monitoring ps node-exporter | grep -q "Up"; then
-                            echo "✅ Node Exporter: RUNNING" >> monitoring-reports/monitoring-status.txt
-                        else
-                            echo "❌ Node Exporter: NOT RUNNING" >> monitoring-reports/monitoring-status.txt
-                        fi
-                        
-                        echo "" >> monitoring-reports/monitoring-status.txt
-                        echo "Monitoring Endpoints:" >> monitoring-reports/monitoring-status.txt
-                        echo "- Prometheus: http://localhost:9090" >> monitoring-reports/monitoring-status.txt
-                        echo "- Grafana: http://localhost:3001 (admin/admin123)" >> monitoring-reports/monitoring-status.txt
-                        echo "- Application Health: http://localhost:8000/health" >> monitoring-reports/monitoring-status.txt
-                        echo "" >> monitoring-reports/monitoring-status.txt
-                        echo "Next Steps:" >> monitoring-reports/monitoring-status.txt
-                        echo "1. Access Grafana dashboard and import monitoring templates" >> monitoring-reports/monitoring-status.txt
-                        echo "2. Set up alerting rules in Prometheus" >> monitoring-reports/monitoring-status.txt
-                        echo "3. Configure notification channels (email, Slack, etc.)" >> monitoring-reports/monitoring-status.txt
-                        echo "4. Create custom dashboards for application-specific metrics" >> monitoring-reports/monitoring-status.txt
-                        '''
-                        
-                        // Basic monitoring verification
-                        echo "🔍 Running monitoring verification..."
-                        sh '''
-                        # Test if Prometheus can scrape targets
-                        echo "Testing Prometheus target scraping..." >> monitoring-reports/monitoring-status.txt
-                        curl -s "http://localhost:9090/api/v1/targets" | grep -o '"health":"[^"]*"' >> monitoring-reports/monitoring-status.txt || echo "Failed to query Prometheus targets" >> monitoring-reports/monitoring-status.txt
-                        
-                        # Check application metrics endpoint
-                        if curl -f http://localhost:8000/health; then
-                            echo "✅ Application metrics endpoint accessible" >> monitoring-reports/monitoring-status.txt
-                        else
-                            echo "❌ Application metrics endpoint not accessible" >> monitoring-reports/monitoring-status.txt
-                        fi
-                        '''
-                        
-                        echo "✅ Monitoring setup completed!"
-                        echo "📊 Prometheus available at: http://localhost:9090"
-                        echo "📈 Grafana available at: http://localhost:3001 (admin/admin123)"
-                        
-                    } catch (Exception e) {
-                        echo "⚠️ Monitoring setup encountered issues: ${e.getMessage()}"
-                        echo "Application will continue running, but monitoring may not be fully functional."
-                        currentBuild.result = 'UNSTABLE'
-                    }
-                }
-            }
-            post {
-                always {
-                    script {
-                        // Archive monitoring reports
-                        if (fileExists('monitoring-reports/')) {
-                            archiveArtifacts artifacts: 'monitoring-reports/**/*', allowEmptyArchive: true
-                            echo "📋 Monitoring reports archived."
-                        }
-                    }
-                }
-                success {
-                    echo "📊 Monitoring and alerting setup successful!"
-                    echo "🔗 Access your monitoring dashboards:"
-                    echo "   - Prometheus: http://localhost:9090"
-                    echo "   - Grafana: http://localhost:3001 (admin/admin123)"
                 }
             }
         }

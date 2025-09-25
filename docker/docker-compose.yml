@@ -90,6 +90,9 @@ services:
     restart: unless-stopped
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+      - SONAR_JDBC_URL=jdbc:h2:mem:sonarqube
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
     ports:
       - "9000:9000"
     volumes:
@@ -100,6 +103,12 @@ services:
       - app-network
     profiles:
       - analysis
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/api/system/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # Security Analysis
   trivy:
