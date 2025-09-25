@@ -75,7 +75,7 @@ EOF
                         if /usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} config --services | grep -q "frontend"; then
                             echo "Frontend service found, running frontend tests..."
                             /usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} run --rm frontend \
-                            npm test -- --watchAll=false --passWithNoTests 2>/dev/null"
+                            npm test -- --watchAll=false --passWithNoTests 2>/dev/null
                         else
                             echo "No frontend service configured, skipping frontend tests"
                         fi
@@ -260,10 +260,10 @@ Analysis Type: Comprehensive Python Code Quality
 - Safety (Dependencies): $SAFETY_ISSUES vulnerabilities
 
 🛠️ Tools Used:
-✅ Flake8 - Python style guide checker
-✅ Bandit - Security linter for Python
-✅ Safety - Dependency vulnerability scanner
-✅ Radon - Code complexity analysis
+Flake8 - Python style guide checker
+Bandit - Security linter for Python
+Safety - Dependency vulnerability scanner
+Radon - Code complexity analysis
 
 📋 Report Files Generated:
 - flake8-report.json (+ readable version)
