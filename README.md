@@ -1,12 +1,3 @@
-
-## Branch Migration Notice
-
-**This repository has migrated to a new main branch.**
-
-All development now continues on the updated `main` branch, which replaces the previous history. If you had forks or clones, please rebase or re-clone to ensure you have the latest code and pipeline setup.
-
----
-
 ## Task Manager Application - CI/CD Pipeline Capstone Project
 
 ### Project Overview
