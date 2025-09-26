@@ -22,9 +22,18 @@ origins = [
     "https://*.railway.app",  # Railway custom domains
 ]
 
+origins = [
+    "http://localhost:3000",  # React frontend
+    "http://127.0.0.1:3000",
+    # Add your deployed frontend URLs
+    "https://front-end-task-flow-production.up.railway.app",  # Your Railway frontend
+    "https://*.up.railway.app",  # Railway frontend URLs
+    "https://*.railway.app",  # Railway custom domains
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Temporarily allow all origins for testing
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
