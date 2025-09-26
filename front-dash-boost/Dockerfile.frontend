@@ -1,7 +1,26 @@
 FROM node:20-alpine
+
 WORKDIR /app
+
+# Copy package files
 COPY package*.json ./
-RUN npm install
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
 COPY . .
-CMD ["npm", "run", "dev"]
+
+# Build argument for API URL (Railway will inject this)
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+# Build the application
+RUN npm run build
+
+# Expose port (Railway will override with $PORT)
+EXPOSE 3000
+
+# Start the preview server (production build)
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]
 
