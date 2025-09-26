@@ -96,16 +96,9 @@ cd TaskManager
 - **Verification**: Health endpoint and database connectivity tests
 
 ### 7. Release Stage (Production) 
-- **Manual Gate**: Requires approval for production deployment
-- **Environment**: Production-specific configuration
-- **Process**: 
-  - Production environment setup
-  - Health verification
-  - Rollback capability
-- **Notifications**: Success/failure notifications
-
-### 8. Monitoring Setup Stage 
-- **Monitoring**: (Optional) Add monitoring tools as needed for your environment
+TO DO
+### 8. Monitoring
+TO DO
 
 ## Pipeline Features
 
