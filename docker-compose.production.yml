@@ -32,6 +32,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/code
+      - PORT=8000
       - DATABASE_URL=mysql+mysqlconnector://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
       - SECRET_KEY=${SECRET_KEY}
     ports:
