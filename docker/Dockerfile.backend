@@ -18,8 +18,6 @@ ENV PYTHONPATH=/code
 
 EXPOSE 8000
 
-# Set default PORT if not provided (for local development)
-ENV PORT=8000
-
-# Run FastAPI - PORT will be provided by cloud platforms, defaults to 8000 locally
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload"]
+# For local development, use fixed port 8000
+# Cloud platforms can override this with their own start command
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
