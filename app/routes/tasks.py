@@ -13,11 +13,13 @@ def get_db():
 
 
 @router.post("/", response_model=schemas.Task)
+@router.post("", response_model=schemas.Task)  # Handle both with and without trailing slash
 def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
     return crud.create_task(db, task, user_id=1)  # TODO: replace with real user from auth
 
 
 @router.get("/", response_model=list[schemas.Task])
+@router.get("", response_model=list[schemas.Task])  # Handle both with and without trailing slash
 def read_tasks(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     return crud.get_tasks(db, user_id=1, skip=skip, limit=limit)
 

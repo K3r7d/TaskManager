@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app import models
 
-app = FastAPI(title="Task Manager API")
+app = FastAPI(title="Task Manager API", redirect_slashes=False)
 Base.metadata.create_all(bind=engine)
 
 # Routers
@@ -12,15 +12,6 @@ app.include_router(auth.router)
 app.include_router(tasks.router)
 app.include_router(files.router)
 app.include_router(notifications.router)
-
-origins = [
-    "http://localhost:3000",  # React frontend
-    "http://127.0.0.1:3000",
-    # Add your deployed frontend URLs
-    "https://*.onrender.com",  # Render frontend URLs
-    "https://*.up.railway.app",  # Railway frontend URLs
-    "https://*.railway.app",  # Railway custom domains
-]
 
 origins = [
     "http://localhost:3000",  # React frontend

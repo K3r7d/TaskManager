@@ -15,6 +15,9 @@ COPY . .
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
+# Debug: Show environment variables
+RUN echo "🔧 Build-time VITE_API_URL: $VITE_API_URL"
+
 # Build the application using npx
 RUN npx vite build
 
