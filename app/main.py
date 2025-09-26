@@ -18,6 +18,8 @@ origins = [
     "http://127.0.0.1:3000",
     # Add your deployed frontend URLs
     "https://*.onrender.com",  # Render frontend URLs
+    "https://*.up.railway.app",  # Railway frontend URLs
+    "https://*.railway.app",  # Railway custom domains
 ]
 
 app.add_middleware(
