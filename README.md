@@ -1,4 +1,4 @@
-# Task Manager Application - Complete DevOps Pipeline Assingment
+# Task Manager Application - Complete DevOps Pipeline Assignment
 
 ## Project Overview
 This comprehensive DevOps capstone project demonstrates a full-stack Task Manager application with enterprise-grade CI/CD pipeline, containerization, and cloud deployment. The application showcases modern development practices with automated testing, security analysis, and multi-environment deployment.
