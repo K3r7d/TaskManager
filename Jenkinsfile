@@ -424,7 +424,7 @@ EOF
         stage('Deploy') {
             when {
                 anyOf {
-                    branch 'main'
+                    branch 'deployment'
                 }
             }
             steps {
@@ -466,6 +466,38 @@ EOF
                 failure {
                     echo "❌ Staging deployment failed - Rolling back..."
                     sh "/usr/local/bin/docker compose --env-file .env -f ${DOCKER_COMPOSE_FILE} down || true"
+                }
+            }
+        }
+
+        stage('Releash')
+        {
+            steps {
+                echo "Starting Release Verification..."
+
+                script {
+                    try {
+                        echo "🔍 Verifying Production Backend Health..."
+                        sh '''
+                        curl -f https://taskmanager-production-4880.up.railway.app/health || {
+                            echo "❌ Production backend health check failed"
+                            exit 1
+                        }
+                        '''
+
+                        echo "🔍 Verifying Production Frontend Availability..."
+                        sh '''
+                        curl -f https://front-end-task-flow-production.up.railway.app || {
+                            echo "❌ Production frontend check failed"
+                            exit 1
+                        }
+                        '''
+
+                        echo "✅ Release verification completed successfully!"
+                    } catch (Exception e) {
+                        echo "❌ Release verification failed: ${e.getMessage()}"
+                        throw e
+                    }
                 }
             }
         }
