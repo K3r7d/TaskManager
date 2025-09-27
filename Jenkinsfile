@@ -422,11 +422,6 @@ EOF
         }
 
         stage('Deploy') {
-            when {
-                anyOf {
-                    branch 'deployment'
-                }
-            }
             steps {
                 echo "Starting Staging Deployment..."
                 
